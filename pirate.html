@@ -484,6 +484,7 @@
         }
         
         function sinkShip(ship) {
+ console.log('sinkShip called for:', ship);
             if (ship.sinking) return;
             ship.sinking = true;
 
@@ -708,25 +709,14 @@
         });
         
         Events.on(render, 'afterRender', () => {
-            console.log('afterRender is firing'); // Add this line
             const ctx = render.context;
             const bounds = render.bounds;
-            ctx.fillStyle = 'green';
-            ctx.fillRect(10, 10, 30, 30); // Green box for basic render test
             ctx.save();
 
-            // Test drawing: Draw a red rectangle at a fixed canvas coordinate (before translation)
-            ctx.fillStyle = 'red';
-            ctx.fillRect(canvas.width / 2 - 25, canvas.height / 2 - 25, 50, 50);
-
             // *** DEFINITIVE FIX: Translate the entire context to match the camera ***
-            console.log('Render object before translate:', render);
-            console.log('Before translate. bounds:', bounds);
-            console.log('Attempting test translate');
-            ctx.fillStyle = 'blue';
-            ctx.fillRect(50, 50, 20, 20); // Draw a blue box before the test translate
-            ctx.translate(100, 100);
             ctx.translate(-bounds.min.x, -bounds.min.y);
+
+            // Code to draw the sails and wake particles (which should be transformed by the translation)
 
             for (let i = wakeParticles.length - 1; i >= 0; i--) {
                 const p = wakeParticles[i];
@@ -746,10 +736,12 @@
                 ctx.fill();
             }
 
-            if (!playerShip.sinking && playerShip.world) {
-                console.log('playerShip:', playerShip);
-                console.log('playerShip.world:', playerShip.world);
-                console.log('playerShip.sinking:', playerShip.sinking);
+            // Debugging logs for player ship state
+            console.log('playerShip:', playerShip); // Keep this
+            console.log('playerShip.world:', playerShip.world);
+            console.log('playerShip.sinking:', playerShip.sinking); // Keep this
+
+             if (!playerShip.sinking && playerShip.world) {
                 console.log('Inside sail drawing if block');
                 const ship = playerShip;
                 const pos = ship.position;
@@ -770,15 +762,6 @@
                 const controlPointOffset = Vector.mult(Vector.create(Math.cos(effectiveSailAngle), Math.sin(effectiveSailAngle)), curveMagnitude);
                 const controlPoint_world = Vector.add(pos, controlPointOffset);
 
-                console.log('strokeStyle:', ctx.strokeStyle);
-                console.log('lineWidth:', ctx.lineWidth);
-                console.log('p1_world:', p1_world);
-                console.log('p2_world:', p2_world);
-                console.log('controlPoint_world:', controlPoint_world);
-                console.log('curveMagnitude:', curveMagnitude);
-                console.log('sailHeight:', sailHeight);
-                console.log('strokeStyle:', `rgba(255, 255, 255, ${0.1 + sailHeight * 0.7})`);
-                console.log('lineWidth:', 1 + sailHeight * 4);
                 ctx.beginPath();
                 ctx.moveTo(p1_world.x, p1_world.y);
                 ctx.quadraticCurveTo(controlPoint_world.x, controlPoint_world.y, p2_world.x, p2_world.y);
@@ -801,6 +784,7 @@
         const runner = Runner.create();
         Runner.run(runner, engine);
         
+        Runner.onError(runner, function(event) { console.error('Runner error:', event); });
         showMessage(`Welcome, Captain!
         W/S: Deploy/Furl Sails
         A/D: Turn Rudder
